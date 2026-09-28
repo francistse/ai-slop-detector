@@ -147,8 +147,3 @@ hermes skills inspect ai-slop-detector # preview before installing (optional)
 hermes skills install ai-slop-detector
 # then add Jev credentials (§1) — the skill brings no keys of its own
 ```
-
-### Current status
-- Local install: **done** (symlinked to this repo).
-- Repo committed locally; **not pushed**, **not published** — both await your
-  go (and a decision on public vs private, GitHub-vs-ClawHub).
