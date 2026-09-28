@@ -1,0 +1,13 @@
+# Python / tooling
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+
+# never commit secrets
+.env
+*.pem
+*.key
+
+# macOS
+.DS_Store
