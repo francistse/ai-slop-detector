@@ -140,48 +140,85 @@ DIRECT = _direct_q()
 
 
 # ---------------------------------------------------------------------------
-# Jev backend (hosted via OpenRouter) — reads $OPENROUTER_API_KEY from env/.env
+# Jev backend — provider-agnostic. Two supported providers, selected by env:
+#   official   : Jev's own API          https://thejevai.com/v1/systemone  (JEV_API_KEY, model 'jev-latest')
+#   openrouter : via OpenRouter         https://openrouter.ai/api/alpha/decisions (OPENROUTER_API_KEY, '~typesafe/jev-latest')
+# Selection (JEV_PROVIDER=official|openrouter wins; else auto):
+#   JEV_API_KEY set  -> official ; otherwise -> openrouter.
+# Any endpoint/model can be overridden with JEV_BASE_URL / JEV_MODEL / JEV_API_KEY
+# so a self-hosted / compatible gateway also works. Keys are read at runtime
+# (env first, then ~/.hermes/.env); nothing is stored in this repo.
 # ---------------------------------------------------------------------------
-def _read_env_key():
-    k = os.environ.get("OPENROUTER_API_KEY")
+_DEFAULT_ENDPOINTS = {
+    "openrouter": "https://openrouter.ai/api/alpha/decisions",
+    "official": "https://thejevai.com/v1/systemone",
+}
+_DEFAULT_MODELS = {
+    "openrouter": "~typesafe/jev-latest",
+    "official": "jev-latest",
+}
+
+
+def _read_env_key(name="OPENROUTER_API_KEY"):
+    k = os.environ.get(name)
     if k:
         return k
     env_path = os.path.expanduser("~/.hermes/.env")
     if os.path.exists(env_path):
-        m = re.search(r"^\s*OPENROUTER_API_KEY\s*=\s*(\S+)", open(env_path).read(), re.M)
+        m = re.search(r"^\s*%s\s*=\s*(\S+)" % re.escape(name), open(env_path).read(), re.M)
         if m:
             return m.group(1).strip().strip('"').strip("'")
     return None
 
 
-def _call_jev(text, questions):
+def _jev_config():
+    provider = os.environ.get("JEV_PROVIDER", "").strip().lower()
+    if not provider:
+        provider = "official" if os.environ.get("JEV_API_KEY") else "openrouter"
+    if provider not in ("official", "openrouter"):
+        provider = "openrouter"
+    key_name = "JEV_API_KEY" if provider == "official" else "OPENROUTER_API_KEY"
+    base = os.environ.get("JEV_BASE_URL", _DEFAULT_ENDPOINTS[provider])
+    model = os.environ.get("JEV_MODEL", _DEFAULT_MODELS[provider])
+    key = _read_env_key(key_name)
+    return {"provider": provider, "base": base, "model": model, "key": key,
+            "key_name": key_name}
+
+
+def _call_jev(text, questions, cfg=None):
+    cfg = cfg or _jev_config()
+    from urllib.parse import urlsplit
     import http.client
 
-    key = _read_env_key()
-    if not key:
-        raise RuntimeError("No OPENROUTER_API_KEY found (env or ~/.hermes/.env).")
-    # questions = {qid: full definition dict (type, instructions, criteria?)}
+    if not cfg["key"]:
+        raise RuntimeError(
+            f"No {cfg['key_name']} found for Jev provider '{cfg['provider']}' "
+            "(env or ~/.hermes/.env). Set JEV_PROVIDER / JEV_API_KEY to use the "
+            "official endpoint, or keep OPENROUTER_API_KEY for OpenRouter."
+        )
     payload = {
-        "model": "~typesafe/jev-latest",
+        "model": cfg["model"],
         "state": text,
         "questions": {k: v for k, v in questions.items()},
     }
     body = json.dumps(payload).encode("utf-8")
 
-    # NOTE: urllib.request.urlopen returns 401/403 on this host; http.client works.
+    parsed = urlsplit(cfg["base"])
+    use_tls = parsed.scheme == "https"
+    port = parsed.port or (443 if use_tls else 80)
+    host = parsed.hostname
+    path = parsed.path or "/"
+
+    # NOTE: urllib.request.urlopen returns 401/403 on these hosts; http.client works.
     last = None
     for attempt in range(3):  # bounded retry: 429/5xx only
         try:
-            conn = http.client.HTTPSConnection("openrouter.ai", timeout=60)
-            conn.request(
-                "POST",
-                "/api/alpha/decisions",
-                body=body,
-                headers={
-                    "Authorization": f"Bearer {key}",
-                    "Content-Type": "application/json",
-                },
-            )
+            conn = http.client.HTTPSConnection(host, port, timeout=60) if use_tls \
+                else http.client.HTTPConnection(host, port, timeout=60)
+            conn.request("POST", path, body=body, headers={
+                "Authorization": f"Bearer {cfg['key']}",
+                "Content-Type": "application/json",
+            })
             resp = conn.getresponse()
             raw = resp.read().decode()
             conn.close()
@@ -273,12 +310,15 @@ def _detect_lang(text):
 
 
 def _jev_answers(text, questions):
+    cfg = _jev_config()
     qdefs = {k: {"type": "noul", "instructions": v} for k, v in questions.items()}
-    resp = _call_jev(text, qdefs)
+    resp = _call_jev(text, qdefs, cfg=cfg)
+    usage = resp.get("usage", {}) or {}
     meta = {
-        "note": "hosted via OpenRouter",
-        "cost": resp.get("usage", {}).get("cost"),
-        "model": resp.get("model"),
+        "provider": cfg["provider"],
+        "model": resp.get("model") or cfg["model"],
+        "cost": usage.get("cost"),  # openrouter only
+        "input_tokens": usage.get("input_tokens"),  # official endpoint
     }
     raw = resp.get("answers", {})
     return _normalize(raw), "jev", meta
@@ -407,12 +447,16 @@ def main():
         print(json.dumps(result, ensure_ascii=False, indent=2))
         sys.exit(0 if result["verdict"] != "AI-likely" else 1)
 
-    cost = f"  (cost ${meta.get('cost', 0):.6f})"
+    cost = ""
+    if meta.get("cost") is not None:
+        cost += f"  (cost ${meta['cost']:.6f})"
+    elif meta.get("input_tokens") is not None:
+        cost += f"  ({meta['input_tokens']} in-tokens)"
     out = [
         f"verdict: {result['verdict']}",
         f"ai_probability: {result['ai_probability']:.2%}",
         f"confidence: {result['confidence']:.2%}",
-        f"backend: {backend}{cost}",
+        f"backend: {backend} · provider: {meta.get('provider','?')}{cost}",
         "traits (AI-tell 0-1):",
     ]
     for t in TRAITS:

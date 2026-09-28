@@ -41,8 +41,28 @@ python3 detect.py --lang en --text "An obvious AI sentence..."
 cat post.txt | python3 detect.py --json
 ```
 
-Reads `OPENROUTER_API_KEY` from the environment or `~/.hermes/.env` at runtime
-— **no key is stored in this repo** (see `.gitignore`).
+## Jev providers (flexible)
+
+The Jev transport is provider-agnostic and selected by env vars at runtime
+(**no key is stored in this repo**, see `.gitignore`):
+
+| provider | when | endpoint (default) | key | model |
+|---|---|---|---|---|
+| `openrouter` (default) | no `JEV_API_KEY` set | `openrouter.ai/api/alpha/decisions` | `OPENROUTER_API_KEY` | `~typesafe/jev-latest` |
+| `official` | `JEV_API_KEY` set, or `JEV_PROVIDER=official` | `thejevai.com/v1/systemone` | `JEV_API_KEY` | `jev-latest` |
+
+```bash
+# OpenRouter (default)
+export OPENROUTER_API_KEY=...          # or keep it in ~/.hermes/.env
+
+# Jev's official API
+export JEV_PROVIDER=official
+export JEV_API_KEY=...
+```
+
+Any compatible/hosted gateway can be used via `JEV_BASE_URL` (full endpoint
+URL) + `JEV_MODEL`. Keys are read from the environment first, then from
+`~/.hermes/.env`. The provider used is printed on each run (`provider:`).
 
 Exit codes (CI): `0` = not AI-likely · `1` = AI-likely.
 

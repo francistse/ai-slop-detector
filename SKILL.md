@@ -49,8 +49,11 @@ CI. **Deliberately NOT bundled into the sikaoge-* skills** — call it on demand
 ## Setup (already done on this machine)
 
 ```bash
-# Jev-only. Needs your OpenRouter key, found automatically in ~/.hermes/.env
-#   (no pip install required — the tool talks to OpenRouter directly).
+# Jev-only. Provider is set by env; keys read at runtime (env, then ~/.hermes/.env).
+#   default: OpenRouter — needs OPENROUTER_API_KEY
+#   official Jev API:  export JEV_PROVIDER=official  +  JEV_API_KEY=...
+#   any hosted gateway: JEV_BASE_URL + JEV_MODEL + JEV_API_KEY
+#   (no pip install — the tool talks to the endpoint directly)
 ```
 
 ## Usage
