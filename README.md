@@ -18,30 +18,35 @@ see [`SETUP.md`](SETUP.md).**
 > accused and 0 AI missed**; borderline cases return `ambiguous` instead of
 > guessing. Use for read-only review, never to accuse or gate a person.
 
-## Layout (repo = source of truth)
+## Layout (the skill bundle is the source of truth)
 
 ```
 ai-slop-detector/
-  detect.py            <- the tool (Jev-only)
-  calibration.json     <- per-language verdict thresholds (derived from gold set)
-  SKILL.md             <- Hermes skill doc
-  eval/                <- ALL test materials (gold sets, prompts, harness, reports)
-    README.md          <- test-materials index + naivety assessment
-    VERIFICATION.md    <- full report with per-case Jev scores
-    bench/             <- prompt-variant benchmark + PROMPTS.md (verbatim)
+  skill/ai-slop-detector/   <- THE publishable skill (minimal, self-contained)
+    SKILL.md
+    scripts/detect.py       <- the tool (Jev-only)
+    scripts/calibration.json
+  eval/                     <- ALL test materials (gold sets, prompts, harness, reports)
+    README.md               <- test-materials index + naivety assessment
+    VERIFICATION.md         <- full report with per-case Jev scores
+    bench/                  <- prompt-variant benchmark + PROMPTS.md (verbatim)
+  README.md  SETUP.md  LICENSE  .gitignore
 ```
 
-The Hermes install at `~/.hermes/skills/creative/ai-slop-detector/` is a set of
-**symlinks into this repo**, so there is a single source of truth — the repo. To
-install elsewhere, copy `detect.py`, `calibration.json`, and `SKILL.md`.
+`skill/ai-slop-detector/` is the single source of truth for the tool. The
+Hermes install at `~/.hermes/skills/creative/ai-slop-detector/` is a set of
+**symlinks into that bundle**, so the installed skill and the published skill
+are the same bytes. To install elsewhere, copy the `skill/ai-slop-detector/`
+directory. To publish to a marketplace, point `hermes skills publish` at
+`skill/ai-slop-detector/` (see `SETUP.md` §3).
 
 ## Usage
 
 ```bash
-# canonical project copy
-python3 detect.py --text "你的廣東話帖 ..."            # auto-detects language
-python3 detect.py --lang en --text "An obvious AI sentence..."
-cat post.txt | python3 detect.py --json
+# canonical project copy (the skill bundle is the source of truth)
+python3 skill/ai-slop-detector/scripts/detect.py --text "你的廣東話帖 ..."   # auto-detects language
+python3 skill/ai-slop-detector/scripts/detect.py --lang en --text "An obvious AI sentence..."
+cat post.txt | python3 skill/ai-slop-detector/scripts/detect.py --json
 ```
 
 ## Jev providers (flexible)

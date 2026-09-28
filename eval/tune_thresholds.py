@@ -19,7 +19,8 @@ import os
 import sys
 
 CASES = os.path.expanduser("~/ai-slop-detector/eval/out/cases.csv")
-DETECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # repo root (detect.py)
+DETECT_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                          "skill", "ai-slop-detector", "scripts")  # bundle dir (detect.py + calibration.json)
 OUT = os.path.join(DETECT_DIR, "calibration.json")
 
 FP_CAP = float(os.environ.get("FP_CAP", "0.15"))  # max acceptable false-positive rate
