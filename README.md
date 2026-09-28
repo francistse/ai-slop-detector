@@ -22,7 +22,7 @@ see [`SETUP.md`](SETUP.md).**
 
 ```
 ai-slop-detector/
-  skill/ai-slop-detector/   <- THE publishable skill (minimal, self-contained)
+  skills/ai-slop-detector/   <- THE publishable skill (minimal, self-contained)
     SKILL.md
     scripts/detect.py       <- the tool (Jev-only)
     scripts/calibration.json
@@ -33,20 +33,20 @@ ai-slop-detector/
   README.md  SETUP.md  LICENSE  .gitignore
 ```
 
-`skill/ai-slop-detector/` is the single source of truth for the tool. The
+`skills/ai-slop-detector/` is the single source of truth for the tool. The
 Hermes install at `~/.hermes/skills/creative/ai-slop-detector/` is a set of
 **symlinks into that bundle**, so the installed skill and the published skill
-are the same bytes. To install elsewhere, copy the `skill/ai-slop-detector/`
+are the same bytes. To install elsewhere, copy the `skills/ai-slop-detector/`
 directory. To publish to a marketplace, point `hermes skills publish` at
-`skill/ai-slop-detector/` (see `SETUP.md` §3).
+`skills/ai-slop-detector/` (see `SETUP.md` §3).
 
 ## Usage
 
 ```bash
 # canonical project copy (the skill bundle is the source of truth)
-python3 skill/ai-slop-detector/scripts/detect.py --text "你的廣東話帖 ..."   # auto-detects language
-python3 skill/ai-slop-detector/scripts/detect.py --lang en --text "An obvious AI sentence..."
-cat post.txt | python3 skill/ai-slop-detector/scripts/detect.py --json
+python3 skills/ai-slop-detector/scripts/detect.py --text "你的廣東話帖 ..."   # auto-detects language
+python3 skills/ai-slop-detector/scripts/detect.py --lang en --text "An obvious AI sentence..."
+cat post.txt | python3 skills/ai-slop-detector/scripts/detect.py --json
 ```
 
 ## Jev providers (flexible)

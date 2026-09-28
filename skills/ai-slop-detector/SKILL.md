@@ -9,6 +9,15 @@ metadata:
     tags: [ai-detector, slop, humanize, jev, rubric, cantonese, decision-model]
     category: creative
     related_skills: [humanizer, typesafe-jev, sikaoge-first-principles-analyst]
+required_environment_variables:
+  - name: OPENROUTER_API_KEY
+    prompt: OpenRouter API key (default Jev provider)
+    help: "Set it in the environment; Hermes injects it into sandboxes when this skill is loaded. Get one at openrouter.ai."
+    required_for: "Jev access via the default OpenRouter provider"
+  - name: JEV_API_KEY
+    prompt: Jev official API key
+    help: "Only needed to use the official Jev endpoint; also set JEV_PROVIDER=official."
+    required_for: "Jev access via the official endpoint (optional)"
 ---
 
 # ai-slop-detector
@@ -48,20 +57,22 @@ CI. **Deliberately NOT bundled into the sikaoge-* skills** — call it on demand
 
 ## Setup (already done on this machine)
 
+Set up Jev access via **environment variables** (Hermes injects any that are
+set — see the frontmatter `required_environment_variables`):
+
 ```bash
-# Jev-only. Provider is set by env; keys read at runtime (env, then ~/.hermes/.env).
-#   default: OpenRouter — needs OPENROUTER_API_KEY
-#   official Jev API:  export JEV_PROVIDER=official  +  JEV_API_KEY=...
-#   any hosted gateway: JEV_BASE_URL + JEV_MODEL + JEV_API_KEY
-#   (no pip install — the tool talks to the endpoint directly)
+#   default: OpenRouter — export OPENROUTER_API_KEY=...
+#   official Jev API:  export JEV_PROVIDER=official  +  export JEV_API_KEY=...
+#   any hosted gateway: export JEV_BASE_URL=<url>  +  JEV_MODEL=<model>  +  JEV_API_KEY=...
+#   (stdlib only — no Python dependencies to install)
 ```
 
 ## Usage
 
 ```bash
-SCRIPT=~/ai-slop-detector/detect.py
+SCRIPT=~/ai-slop-detector/skills/ai-slop-detector/scripts/detect.py
 #   (the installed Hermes skill at ~/.hermes/skills/creative/ai-slop-detector/
-#    is a symlink to this same file — repo is the single source of truth)
+#    is a symlink to this same file — the bundle is the single source of truth)
 
 # inline text (default: Jev auto-detects language zh/en)
 python3 "$SCRIPT" --text "你的廣東話帖 ..."

@@ -27,7 +27,7 @@ hermes skills install ai-slop-detector
 # …or it's already installed locally (this machine):
 ls ~/.hermes/skills/creative/ai-slop-detector/
 #   SKILL.md, scripts/detect.py, scripts/calibration.json
-#   (on this machine these are symlinks into ~/ai-slop-detector/skill/ai-slop-detector/,
+#   (on this machine these are symlinks into ~/ai-slop-detector/skills/ai-slop-detector/,
 #    so a change in the repo's skill bundle is immediately live in the skill.)
 ```
 
@@ -71,7 +71,7 @@ detector as a plain CLI — no Hermes required.
    ```bash
    git clone https://github.com/francistse/ai-slop-detector   # once pushed
    cd ai-slop-detector
-   #   (or just copy the skill bundle: skill/ai-slop-detector/)
+   #   (or just copy the skill bundle: skills/ai-slop-detector/)
    ```
 
 2. Put a key where the script can read it (env var wins; otherwise it reads
@@ -83,15 +83,15 @@ detector as a plain CLI — no Hermes required.
    export JEV_API_KEY=...
    ```
 
-3. Run it (the tool is `skill/ai-slop-detector/scripts/detect.py`):
+3. Run it (the tool is `skills/ai-slop-detector/scripts/detect.py`):
    ```bash
-   python3 skill/ai-slop-detector/scripts/detect.py --text "An obvious AI sentence about redefining work..."
+   python3 skills/ai-slop-detector/scripts/detect.py --text "An obvious AI sentence about redefining work..."
    # verdict: AI-likely
-   python3 skill/ai-slop-detector/scripts/detect.py --lang en --text "real human typing, lowercase, no polish"
+   python3 skills/ai-slop-detector/scripts/detect.py --lang en --text "real human typing, lowercase, no polish"
    # verdict: human-likely
 
    # machine-readable (CI-ready); exit code 0 = not AI-likely, 1 = AI-likely
-   python3 skill/ai-slop-detector/scripts/detect.py --text "..." --json; echo "exit=$?"
+   python3 skills/ai-slop-detector/scripts/detect.py --text "..." --json; echo "exit=$?"
    ```
 
 4. (Optional) any compatible/hosted Jev endpoint:
@@ -103,7 +103,7 @@ detector as a plain CLI — no Hermes required.
 
 **Verify**
 ```bash
-python3 skill/ai-slop-detector/scripts/detect.py --text "真相係——我哋由頭到尾都冇保護機制。你話，條命算邊個數？" --json
+python3 skills/ai-slop-detector/scripts/detect.py --text "真相係——我哋由頭到尾都冇保護機制。你話，條命算邊個數？" --json
 # expect: "verdict": "AI-likely"
 ```
 
@@ -118,15 +118,15 @@ either **GitHub** or **ClawHub**.
 
 ### Author — publish (do once, after you've pushed the repo)
 The command takes a **skill directory** (must contain `<name>/SKILL.md`, plus
-any `scripts/`). The repo's `skill/ai-slop-detector/` **is already that** — a
+any `scripts/`). The repo's `skills/ai-slop-detector/` **is already that** — a
 real-file bundle (no symlinks), so publish it directly:
 
 ```bash
 # publish to ClawHub (hosted registry)
-hermes skills publish --to clawhub ~/ai-slop-detector/skill/ai-slop-detector
+hermes skills publish --to clawhub ~/ai-slop-detector/skills/ai-slop-detector
 
 #    …or to a GitHub skills-registry repo (e.g. you maintain a repo of skills)
-hermes skills publish --to github --repo <owner>/<skills-registry> ~/ai-slop-detector/skill/ai-slop-detector
+hermes skills publish --to github --repo <owner>/<skills-registry> ~/ai-slop-detector/skills/ai-slop-detector
 
 # confirm it's searchable
 hermes skills search ai-slop-detector

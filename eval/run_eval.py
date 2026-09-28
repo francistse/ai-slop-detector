@@ -18,7 +18,7 @@ import re
 import sys
 
 DETECT_PY = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                         "..", "skill", "ai-slop-detector", "scripts", "detect.py")
+                         "..", "skills", "ai-slop-detector", "scripts", "detect.py")
 
 
 def load_detect():

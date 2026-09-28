@@ -13,7 +13,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-                                "skill", "ai-slop-detector", "scripts"))  # bundle detect.py
+                                "skills", "ai-slop-detector", "scripts"))  # bundle detect.py
 import detect
 
 hu = [json.loads(l) for l in open("/Users/francis/ai-slop-detector/eval/raw/canto_human.jsonl") if l.strip()]

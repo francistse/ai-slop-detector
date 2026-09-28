@@ -146,8 +146,9 @@ DIRECT = _direct_q()
 # Selection (JEV_PROVIDER=official|openrouter wins; else auto):
 #   JEV_API_KEY set  -> official ; otherwise -> openrouter.
 # Any endpoint/model can be overridden with JEV_BASE_URL / JEV_MODEL / JEV_API_KEY
-# so a self-hosted / compatible gateway also works. Keys are read at runtime
-# (env first, then ~/.hermes/.env); nothing is stored in this repo.
+# so a self-hosted / compatible gateway also works. Keys are read from the
+# environment only; nothing is stored in this repo. (Hermes injects the keys
+# declared in `required_environment_variables` into sandboxes automatically.)
 # ---------------------------------------------------------------------------
 _DEFAULT_ENDPOINTS = {
     "openrouter": "https://openrouter.ai/api/alpha/decisions",
@@ -160,15 +161,7 @@ _DEFAULT_MODELS = {
 
 
 def _read_env_key(name="OPENROUTER_API_KEY"):
-    k = os.environ.get(name)
-    if k:
-        return k
-    env_path = os.path.expanduser("~/.hermes/.env")
-    if os.path.exists(env_path):
-        m = re.search(r"^\s*%s\s*=\s*(\S+)" % re.escape(name), open(env_path).read(), re.M)
-        if m:
-            return m.group(1).strip().strip('"').strip("'")
-    return None
+    return os.environ.get(name)
 
 
 def _jev_config():
@@ -192,9 +185,9 @@ def _call_jev(text, questions, cfg=None):
 
     if not cfg["key"]:
         raise RuntimeError(
-            f"No {cfg['key_name']} found for Jev provider '{cfg['provider']}' "
-            "(env or ~/.hermes/.env). Set JEV_PROVIDER / JEV_API_KEY to use the "
-            "official endpoint, or keep OPENROUTER_API_KEY for OpenRouter."
+            f"No {cfg['key_name']} for Jev provider '{cfg['provider']}' in the "
+            "environment. Set it (Hermes injects keys declared in "
+            "required_environment_variables; standalone: export it)."
         )
     payload = {
         "model": cfg["model"],
